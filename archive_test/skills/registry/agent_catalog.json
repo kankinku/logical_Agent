@@ -1,0 +1,215 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "description": "Global Agent Type Catalog - 에이전트 타입 정의서",
+    "last_updated": "2026-01-28",
+    "constitution_ref": "constitution.md#agent-types"
+  },
+  "agent_types": {
+    "orchestrator": {
+      "type_id": "orchestrator",
+      "name": "Orchestrator",
+      "responsibility": "프로젝트 이해, 탑다운 계획 수립, 실행 단계 제어",
+      "authority": {
+        "can_create_wbs": true,
+        "can_decompose_tasks": true,
+        "can_assign_agents": true,
+        "can_halt_execution": true,
+        "can_rollback_to_stage": true
+      },
+      "core_skills": [
+        "architecture",
+        "software-architecture",
+        "senior-architect"
+      ],
+      "stage_involvement": [
+        "Stage 1: Project Charter",
+        "Stage 2: WBS 생성",
+        "Stage 3: Task Spec 표준화"
+      ],
+      "required_capabilities": [
+        "project decomposition",
+        "dependency analysis",
+        "resource planning",
+        "risk assessment"
+      ],
+      "communication": {
+        "receives_from": ["user", "validator"],
+        "sends_to": ["router", "reviewer", "validator"]
+      }
+    },
+    "router": {
+      "type_id": "router",
+      "name": "Router",
+      "responsibility": "태스크를 skill_id 기반으로 매핑, 적절한 스킬 라우팅",
+      "authority": {
+        "can_query_skills_index": true,
+        "can_recommend_skills": true,
+        "can_reject_invalid_task": true
+      },
+      "core_skills": [],
+      "stage_involvement": [
+        "Stage 4: Skill Routing"
+      ],
+      "required_capabilities": [
+        "semantic matching",
+        "tag-based search",
+        "skill recommendation",
+        "dependency resolution"
+      ],
+      "communication": {
+        "receives_from": ["orchestrator"],
+        "sends_to": ["implementer", "researcher"]
+      },
+      "routing_algorithm": {
+        "steps": [
+          "1. Parse task purpose and acceptance_criteria",
+          "2. Extract keywords and required capabilities",
+          "3. Query skills_index.json by tags and description",
+          "4. Rank skills by relevance",
+          "5. Separate required vs recommended",
+          "6. Return routing_rationale"
+        ]
+      }
+    },
+    "reviewer": {
+      "type_id": "reviewer",
+      "name": "Reviewer",
+      "responsibility": "구조/논리/품질 검토, 3-Layer Quality Model 적용",
+      "authority": {
+        "can_approve": true,
+        "can_reject": true,
+        "can_request_revision": true,
+        "can_halt_if_critical": true
+      },
+      "core_skills": [
+        "code-review-checklist",
+        "clean-code",
+        "software-architecture"
+      ],
+      "stage_involvement": [
+        "Stage 5: 리뷰"
+      ],
+      "required_capabilities": [
+        "logic verification",
+        "premise reliability check",
+        "reality consistency check",
+        "DOD enforcement"
+      ],
+      "communication": {
+        "receives_from": ["implementer", "researcher"],
+        "sends_to": ["validator", "orchestrator"]
+      },
+      "review_criteria": {
+        "layer_1": "논리 검증 (Logic)",
+        "layer_2": "전제 신뢰성 (Premise)",
+        "layer_3": "현실 일관성 (Reality)"
+      }
+    },
+    "validator": {
+      "type_id": "validator",
+      "name": "Validator",
+      "responsibility": "acceptance criteria 검증, 성공 기준 충족 확인",
+      "authority": {
+        "can_pass": true,
+        "can_fail": true,
+        "can_request_rollback": true,
+        "final_decision": true
+      },
+      "core_skills": [
+        "production-code-audit"
+      ],
+      "stage_involvement": [
+        "Stage 5: 검증"
+      ],
+      "required_capabilities": [
+        "acceptance testing",
+        "evidence validation",
+        "success criteria measurement",
+        "regression detection"
+      ],
+      "communication": {
+        "receives_from": ["reviewer"],
+        "sends_to": ["orchestrator", "user"]
+      },
+      "validation_process": {
+        "steps": [
+          "1. Load task_spec.acceptance_criteria",
+          "2. Execute test_method for each criterion",
+          "3. Collect evidence",
+          "4. Pass/Fail decision",
+          "5. Document validation_result"
+        ]
+      }
+    },
+    "researcher": {
+      "type_id": "researcher",
+      "name": "Researcher",
+      "responsibility": "정보 수집, 근거 조사, Evidence Collection",
+      "authority": {
+        "can_query_external": true,
+        "can_read_codebase": true,
+        "can_analyze_logs": true
+      },
+      "core_skills": [],
+      "stage_involvement": [
+        "Stage 5: 실행 (조사 태스크)"
+      ],
+      "required_capabilities": [
+        "evidence collection",
+        "source evaluation",
+        "data curation",
+        "gap detection"
+      ],
+      "communication": {
+        "receives_from": ["router"],
+        "sends_to": ["reviewer"]
+      },
+      "lifecycle": "created per research task, destroyed after completion"
+    },
+    "implementer": {
+      "type_id": "implementer",
+      "name": "Implementer",
+      "responsibility": "코드/문서 작성, 실제 구현 작업 수행",
+      "authority": {
+        "can_write_code": true,
+        "can_write_docs": true,
+        "can_modify_files": true
+      },
+      "core_skills": [],
+      "stage_involvement": [
+        "Stage 5: 실행 (구현 태스크)"
+      ],
+      "required_capabilities": [
+        "code generation",
+        "documentation writing",
+        "test implementation",
+        "refactoring"
+      ],
+      "communication": {
+        "receives_from": ["router"],
+        "sends_to": ["reviewer"]
+      },
+      "lifecycle": "created per implementation task, destroyed after completion"
+    }
+  },
+  "instance_creation_rules": {
+    "persistent_agents": [
+      "orchestrator",
+      "router",
+      "reviewer",
+      "validator"
+    ],
+    "transient_agents": [
+      "researcher",
+      "implementer"
+    ],
+    "creation_policy": "Orchestrator가 태스크 유형에 따라 researcher/implementer 생성"
+  },
+  "skill_id_requirements": {
+    "rule": "모든 에이전트는 스킬 참조 시 skill_id만 사용",
+    "prohibited": "path 기반 참조",
+    "example_valid": "skill_id: architecture",
+    "example_invalid": "skills/coding/architecture/architecture"
+  }
+}

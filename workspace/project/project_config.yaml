@@ -1,0 +1,209 @@
+# Workspace Project Configuration
+
+# This is the PROJECT OVERLAY that can be changed without touching Global Constitution
+schema_version: "1.0"
+workspace_name: "logical_agent_project"
+created: "2026-01-28"
+
+# ============================================================================
+# Project Definition
+# ============================================================================
+
+project:
+  objective: |
+    Evidence-First 추론 시스템을 갖춘 에이전트 시스템 구축.
+    탑다운 계획, 근거 기반 판단, 구조적 품질 관리를 통해
+    "일을 망치지 못하게 막는 구조" 완성.
+  
+  non_goals:
+    - "완벽한 AI 추론 엔진 개발 (연구 범위 아님)"
+    - "모든 도메인 커버 (특정 도메인에 집중)"
+    - "실시간 성능 최적화 (정확성 우선)"
+  
+  scope:
+    included:
+      - "Global Constitution 구축"
+      - "Agent Catalog 정의"
+      - "Evidence-First 핵심 스킬 3개"
+      - "Workspace 템플릿 구축"
+    excluded:
+      - "프로덕션 배포 인프라"
+      - "UI/UX 개발"
+      - "전체 스킬 마이그레이션 (최소셋만)"
+  
+  constraints:
+    - "LLM API 비용 제한 (토큰 효율성 중요)"
+    - "단일 개발자 리소스"
+    - "문서 기반 설계 (코드보다 규칙 우선)"
+  
+  acceptance_criteria:
+    - criterion: "Constitution 문서로 금지 사항 판단 가능"
+      measurement: "문서 리뷰 통과"
+    
+    - criterion: "Router가 skill_id로 라우팅 성공"
+      measurement: "시뮬레이션 테스트 통과"
+    
+    - criterion: "Evidence-First 스킬 3개 동작"
+      measurement: "예제 태스크 실행 성공"
+    
+    - criterion: "Workspace 설정 변경으로 재구성 가능"
+      measurement: "project_config.yaml 수정 후 즉시 적용"
+
+# ============================================================================
+# Routing Rules (Task → Skills)
+# ============================================================================
+
+routing_rules:
+  # Task tags에 따라 required/recommended skill_id 매핑
+  
+  - task_tag: "analysis"
+    required_skills:
+      - "evidence-collection"
+      - "evidence-map-builder"
+    recommended_skills:
+      - "scenario-generator"
+    rationale: "분석 작업은 근거 수집과 구조화 필수"
+  
+  - task_tag: "architecture"
+    required_skills:
+      - "architecture"
+      - "software-architecture"
+    recommended_skills:
+      - "senior-architect"
+    rationale: "아키텍처 결정은 구조적 분석 필요"
+  
+  - task_tag: "code-review"
+    required_skills:
+      - "code-review-checklist"
+      - "clean-code"
+    recommended_skills:
+      - "production-code-audit"
+    rationale: "코드 리뷰는 체크리스트와 품질 기준 필수"
+  
+  - task_tag: "evidence-based"
+    required_skills:
+      - "evidence-collection"
+      - "evidence-map-builder"
+      - "scenario-generator"
+    recommended_skills: []
+    rationale: "Evidence-First 전체 파이프라인"
+  
+  # Default fallback
+  - task_tag: "default"
+    required_skills: []
+    recommended_skills:
+      - "architecture"
+    rationale: "기본 태스크는 아키텍처 스킬 권장"
+
+# ============================================================================
+# Agent Instances (Global Type + Workspace Customization)
+# ============================================================================
+
+agent_instances:
+  orchestrator:
+    type: "orchestrator"  # from agent_catalog.json
+    extra_skills:
+      - "evidence-collection"  # 프로젝트 이해 시 근거 수집 추가
+    custom_behavior:
+      planning_depth: 4  # WBS 최대 4레벨
+      rollback_threshold: "critical"  # critical 이슈만 롤백
+  
+  router:
+    type: "router"
+    extra_skills: []
+    custom_behavior:
+      matching_algorithm: "semantic+tag"
+      min_confidence: 0.7
+  
+  reviewer:
+    type: "reviewer"
+    extra_skills:
+      - "evidence-policy"  # 근거 정책 강화
+    custom_behavior:
+      strictness: "high"
+      auto_approve_threshold: 0.95
+  
+  validator:
+    type: "validator"
+    extra_skills: []
+    custom_behavior:
+      acceptance_threshold: 1.0  # 100% 통과 필수
+      evidence_required: true
+
+# ============================================================================
+# Workflow Preferences
+# ============================================================================
+
+workflow:
+  default_stage_order:
+    - "Stage 1: Project Charter"
+    - "Stage 2: WBS 생성"
+    - "Stage 3: Task Spec 표준화"
+    - "Stage 4: Skill Routing"
+    - "Stage 5: 실행 → 리뷰 → 검증"
+  
+  stage_override:
+    allow_skip: false
+    allow_parallel: false  # 순차 진행 강제
+  
+  quality_gates:
+    gate_1_logic: "mandatory"
+    gate_2_premise: "mandatory"
+    gate_3_reality: "mandatory"
+  
+  evidence_policy:
+    min_reliability_level: "L3"
+    assumption_cost_limit: 10
+
+# ============================================================================
+# Domain Knowledge (프로젝트별)
+# ============================================================================
+
+domain:
+  ontology_ref: "workspace/project/ontology.yaml"
+  glossary_ref: "workspace/project/glossary.md"
+  
+  key_concepts:
+    - concept: "Evidence-First"
+      definition: "추론 전 근거 수집 우선"
+    
+    - concept: "Pivotal Assumption"
+      definition: "판결을 뒤집을 수 있는 핵심 가정"
+    
+    - concept: "3-Layer Quality Model"
+      definition: "논리/전제/현실 3단계 검증"
+
+# ============================================================================
+# Reporting
+# ============================================================================
+
+reporting:
+  output_dir: "workspace/reports"
+  
+  completion_report:
+    template: "agent_completion_template.md"
+    required_sections:
+      - "작업 요약"
+      - "사용된 스킬"
+      - "근거 목록"
+      - "검증 결과"
+  
+  rejection_report:
+    enabled: true
+    include_rationale: true
+    reference: "docs/11 - Rejection-Centric Report Generator.md"
+
+# ============================================================================
+# Global References (Read-Only)
+# ============================================================================
+
+global_refs:
+  constitution: "skills/constitution/constitution.md"
+  documentation_standards: "skills/constitution/documentation_standards.md"
+  task_protocol: "skills/constitution/task_protocol.md"
+  quality_gates: "skills/constitution/quality_gates.md"
+  evidence_policy: "skills/constitution/evidence_policy.md"
+  agent_catalog: "skills/registry/agent_catalog.json"
+  skills_index: "skills/registry/skills_index.json"
+
+# NOTE: Global refs는 Workspace에서 수정 불가 (Read-Only)

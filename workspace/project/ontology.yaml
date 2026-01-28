@@ -1,0 +1,237 @@
+# Domain Ontology
+
+# 프로젝트 도메인 온톨로지 - 개념 간 관계 정의
+schema_version: "1.0"
+
+# ============================================================================
+# Core Concepts
+# ============================================================================
+
+concepts:
+  evidence_first:
+    name: "Evidence-First 원칙"
+    category: "methodology"
+    definition: "추론/분석 전에 근거를 먼저 수집하는 원칙"
+    properties:
+      - "hallucination_prevention"
+      - "fact_based_reasoning"
+    related_skills:
+      - "evidence-collection"
+      - "evidence-map-builder"
+  
+  top_down_enforcement:
+    name: "탑다운 강제"
+    category: "process"
+    definition: "설계 → 분해 → 태스크 → 실행 → 검증의 하향식 흐름"
+    properties:
+      - "stage_ordering"
+      - "rollback_on_failure"
+    related_documents:
+      - "task_protocol.md"
+  
+  quality_gates:
+    name: "3-Layer Quality Model"
+    category: "verification"
+    definition: "논리/전제/현실 3단계 검증 모델"
+    layers:
+      - name: "Logic"
+        description: "추론 과정 타당성"
+      - name: "Premise"
+        description: "전제 신뢰성"
+      - name: "Reality"
+        description: "현실 일관성"
+
+# ============================================================================
+# Entity Types
+# ============================================================================
+
+entities:
+  agent:
+    types:
+      - orchestrator
+      - router
+      - reviewer
+      - validator
+      - researcher
+      - implementer
+    attributes:
+      - type_id
+      - responsibility
+      - authority
+      - core_skills
+  
+  skill:
+    types:
+      - reasoning
+      - coding
+      - data
+    attributes:
+      - skill_id
+      - canonical_home
+      - tags
+      - use_when
+  
+  task:
+    attributes:
+      - task_id
+      - wbs_path
+      - purpose
+      - acceptance_criteria
+      - dependencies
+
+# ============================================================================
+# Relationships
+# ============================================================================
+
+relationships:
+  # Agent → Skill
+  - source: "agent"
+    relation: "uses"
+    target: "skill"
+    cardinality: "many_to_many"
+    example: "orchestrator uses architecture skill"
+  
+  # Task → Skill
+  - source: "task"
+    relation: "requires"
+    target: "skill"
+    cardinality: "many_to_many"
+    constraint: "routed by router agent"
+  
+  # Evidence → Scenario
+  - source: "evidence"
+    relation: "constrains"
+    target: "scenario"
+    cardinality: "one_to_many"
+    rule: "scenario cannot exceed evidence_map"
+  
+  # Assumption → Scenario
+  - source: "assumption"
+    relation: "costs"
+    target: "scenario"
+    cardinality: "many_to_one"
+    rule: "higher cost = lower priority"
+  
+  # Stage → Stage
+  - source: "stage_n"
+    relation: "precedes"
+    target: "stage_n+1"
+    cardinality: "one_to_one"
+    constraint: "sequential only"
+
+# ============================================================================
+# Hierarchies
+# ============================================================================
+
+hierarchies:
+  priority_hierarchy:
+    levels:
+      - level: 1
+        name: "Global Constitution + Documentation Standards"
+        immutable: true
+      - level: 2
+        name: "Task Protocol"
+        immutable: true
+      - level: 3
+        name: "Quality Gates & Evidence Policy"
+        immutable: true
+      - level: 4
+        name: "Workspace Project Config"
+        mutable: true
+      - level: 5
+        name: "Task Spec"
+        mutable: true
+  
+  evidence_ hierarchy:
+    levels:
+      - level: 1
+        name: "L1 - Observed Facts"
+        reliability: "highest"
+        cost: 0
+      - level: 2
+        name: "L2 - Verified Data"
+        reliability: "high"
+        cost: 1
+      - level: 3
+        name: "L3 - Expert Opinion"
+        reliability: "medium"
+        cost: 2
+      - level: 4
+        name: "L4 - Logical Inference"
+        reliability: "low"
+        cost: 3
+      - level: 5
+        name: "L5 - Assumptions"
+        reliability: "lowest"
+        cost: 5
+
+# ============================================================================
+# Constraints
+# ============================================================================
+
+constraints:
+  - name: "Path Reference Prohibition"
+    rule: "skill_id 필수, path 참조 금지"
+    enforcement: "GC-P-003"
+  
+  - name: "Evidence-First Mandate"
+    rule: "Generate 전에 Evidence Collection 필수"
+    enforcement: "evidence_policy.md"
+  
+  - name: "No Skip Stages"
+    rule: "Stage N 미완료 시 Stage N+1 차단"
+    enforcement: "task_protocol.md"
+  
+  - name: "Document Verification Lock"
+    rule: "Task Spec 없으면 작업 무효"
+    enforcement: "GC-IV-001"
+
+# ============================================================================
+# Workflows
+# ============================================================================
+
+workflows:
+  evidence_first_pipeline:
+    stages:
+      - stage: "Data Requirements"
+        output: "requirements.yaml"
+      - stage: "Evidence Collection"
+        skill: "evidence-collection"
+        output: "evidence_list.json"
+      - stage: "Evidence Map"
+        skill: "evidence-map-builder"
+        output: "evidence_map.json"
+      - stage: "Scenario Generation"
+        skill: "scenario-generator"
+        output: "scenarios.json"
+  
+  top_down_execution:
+    stages:
+      - stage: "Stage 1"
+        name: "Project Charter"
+        agent: "orchestrator"
+      - stage: "Stage 2"
+        name: "WBS"
+        agent: "orchestrator"
+      - stage: "Stage 3"
+        name: "Task Spec"
+        agent: "orchestrator"
+      - stage: "Stage 4"
+        name: "Skill Routing"
+        agent: "router"
+      - stage: "Stage 5"
+        name: "Execution"
+        agents: ["implementer", "reviewer", "validator"]
+
+# ============================================================================
+# Metrics
+# ============================================================================
+
+metrics:
+  scenario_cost:
+    formula: "(assumptions × 2) + (L4_evidence × 1) + (contradictions × 10)"
+    lower_is_better: true
+  
+  evidence_reliability:
+    formula: "(L1_count × 5) + (L2_count × 4) + (L3_count × 3) / total_evidence"
+    higher_is_better: true
